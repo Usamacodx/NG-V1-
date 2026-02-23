@@ -1,23 +1,97 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Navigation } from "./components/Navigation";
-import { Footer } from "./components/Footer";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+
+// Components
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+
+// Pages
 import ProductListing from "./pages/ProductListing";
+import ProductDetail from "./pages/ProductDetail";
+import CustomizationStudio from "./pages/CustomizationStudio";
 import AddProduct from "./pages/admin/AddProduct";
+import AdminOrders from "./pages/admin/AdminOrders";
+import Signup from "./pages/SignUp";
+import Login from "./pages/Login";
+import EditProduct from "./pages/admin/EditProduct";
+import Cart from "./pages/Cart";
+import AdminLogin from "./pages/AdminLogin";
+import PreviewPage from "./pages/PreviewPage";
+import Checkout from "./pages/Checkout";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import AboutUs from "./pages/AboutUs";
+import HowItWorks from "./pages/HowItWorks";
+import Pricing from "./pages/Pricing";
+import FAQs from "./pages/FAQs";
+import ContactUs from "./pages/ContactUs";
+import Shipping from "./pages/Shipping";
+import Returns from "./pages/Returns";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import SVGColorTest from "./pages/SVGColorTest";
 
-function App() {
+export default function App() {
+  const [isAdmin, setIsAdmin] = useState(false); // Track admin login
+
+  // ✅ Initialize app in customer mode on first load
+  useEffect(() => {
+    // Clear admin session on app startup
+    localStorage.removeItem("isAdminLoggedIn");
+    setIsAdmin(false);
+  }, []);
+
   return (
-    <Router>
-      <Navigation />
+    <AuthProvider>
+      <CartProvider>
+        <BrowserRouter>
+          {/* Header */}
+          <Header />
 
-      <Routes>
-        <Route path="/" element={<ProductListing />} />
-        <Route path="/products" element={<ProductListing />} />
-        <Route path="/admin/add-product" element={<AddProduct />} />
-      </Routes>
+          {/* Routes */}
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<ProductListing />} />
+            <Route path="/products" element={<ProductListing />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/customize/:id" element={<CustomizationStudio />} />
+            <Route path="/svg-test" element={<SVGColorTest />} />
+            <Route path="/preview" element={<PreviewPage />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<Login setIsAdmin={setIsAdmin} />} />
+            <Route path="/signup" element={<Signup setIsAdmin={setIsAdmin} />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+            
+            {/* Footer Links Routes */}
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/faqs" element={<FAQs />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/shipping" element={<Shipping />} />
+            <Route path="/returns" element={<Returns />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={<AdminLogin setIsAdmin={setIsAdmin} />}
+            />
+            <Route
+              path="/admin/add-product"
+              element={<AddProduct />}
+            />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+          </Routes>
 
-      <Footer />
-    </Router>
+          {/* Footer */}
+          <Footer />
+        </BrowserRouter>
+      </CartProvider>
+    </AuthProvider>
   );
 }
-
-export default App;
