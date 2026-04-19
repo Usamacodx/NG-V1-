@@ -369,20 +369,34 @@ export default function Checkout() {
                 <div key={idx} style={{border:'1px solid #ddd', borderRadius:'8px', padding:'12px', background:'#fafafa'}}>
                   <div style={{display:'flex', gap:'12px', marginBottom:'12px'}}>
                     {(() => {
-                      const imageUrl = it.frontImage || it.image || 'https://via.placeholder.com/80';
+                      // Check if we have a captured design image (from customization)
+                      let customizationDetails = null;
+                      if (it.customization) {
+                        try {
+                          customizationDetails = typeof it.customization === "string"
+                            ? JSON.parse(it.customization)
+                            : it.customization;
+                        } catch (e) {
+                          console.error("Failed to parse customization:", e);
+                        }
+                      }
+
+                      // Prioritize captured design image, then item.frontImage, then fallback
+                      const designImage = customizationDetails?.frontDesignImage || it.frontImage;
+                      const imageUrl = designImage || it.image || 'https://via.placeholder.com/80';
                       
                       // Get shirt color from customization if available
                       let shirtColorToUse = "#FFFFFF";
-                      if (it.customization) {
-                        try {
-                          const details = typeof it.customization === "string"
-                            ? JSON.parse(it.customization)
-                            : it.customization;
-                          const front = details.frontDesign || details;
-                          shirtColorToUse = front.shirtColor || "#FFFFFF";
-                        } catch (e) {
-                          // Use default white
-                        }
+                      if (customizationDetails) {
+                        const front = customizationDetails.frontDesign || customizationDetails;
+                        shirtColorToUse = front.shirtColor || "#FFFFFF";
+                      }
+
+                      // If we have a captured design image or it's a data URL, display it directly
+                      if (imageUrl.startsWith("data:image")) {
+                        return (
+                          <img src={imageUrl} alt={it.name} style={{width:100, height:100, objectFit:'cover', borderRadius:'6px'}} />
+                        );
                       }
 
                       // If SVG, render with SVGShirtContainer, otherwise use img
@@ -514,8 +528,29 @@ export default function Checkout() {
                     <div key={idx} style={{marginBottom:14, paddingBottom:12, borderBottom:'1px solid #f0f0f0'}}>
                       <div style={{display:'flex', gap:12, marginBottom:10}}>
                         {(() => {
-                          const imageUrl = it.frontImage || it.image || 'https://via.placeholder.com/80';
-                          const shirtColorToUse = front?.shirtColor || "#FFFFFF";
+                          // Check if we have a captured design image (from customization)
+                          let customizationDetails = null;
+                          if (it.customization) {
+                            try {
+                              customizationDetails = typeof it.customization === "string"
+                                ? JSON.parse(it.customization)
+                                : it.customization;
+                            } catch (e) {
+                              console.error("Failed to parse customization:", e);
+                            }
+                          }
+
+                          // Prioritize captured design image, then item.frontImage, then fallback
+                          const designImage = customizationDetails?.frontDesignImage || it.frontImage;
+                          const imageUrl = designImage || it.image || 'https://via.placeholder.com/80';
+                          const shirtColorToUse = customizationDetails?.frontDesign?.shirtColor || "#FFFFFF";
+
+                          // If we have a captured design image or it's a data URL, display it directly
+                          if (imageUrl.startsWith("data:image")) {
+                            return (
+                              <img src={imageUrl} alt={it.name} style={{width:80, height:80, objectFit:'cover', borderRadius:'4px', border:'1px solid #ddd'}} />
+                            );
+                          }
 
                           // If SVG, render with SVGShirtContainer, otherwise use img
                           if (isSVGImage(imageUrl)) {

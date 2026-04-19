@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import ProductListing from "./pages/ProductListing";
 import ProductDetail from "./pages/ProductDetail";
 import CustomizationStudio from "./pages/CustomizationStudio";
+import ShirtViewer3D from "./pages/ShirtViewer3D";
 import AddProduct from "./pages/admin/AddProduct";
 import AdminOrders from "./pages/admin/AdminOrders";
 import Signup from "./pages/SignUp";
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/products" element={<ProductListing />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/customize/:id" element={<CustomizationStudio />} />
+            <Route path="/customize/:id/3d-view" element={<ShirtViewer3D />} />
             <Route path="/svg-test" element={<SVGColorTest />} />
             <Route path="/preview" element={<PreviewPage />} />
             <Route path="/checkout" element={<Checkout />} />

@@ -14,6 +14,36 @@ const isSVGImage = (imageData) => {
   return false;
 };
 
+// Utility function to capture a design view as a PNG data URL
+const captureDesignAsImage = async (canvasElement) => {
+  if (!canvasElement) return null;
+  
+  try {
+    // Get canvas dimensions
+    const rect = canvasElement.getBoundingClientRect();
+    const width = rect.width || 400;
+    const height = rect.height || 500;
+    
+    // Use html2canvas to capture the design
+    const screenshotCanvas = await html2canvas(canvasElement, {
+      backgroundColor: "#f0f0f0",
+      scale: 2, // Higher scale for better quality
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: width,
+      height: height,
+    });
+    
+    // Convert to data URL
+    const dataUrl = screenshotCanvas.toDataURL("image/png");
+    return dataUrl;
+  } catch (error) {
+    console.error("Error capturing design:", error);
+    return null;
+  }
+};
+
 export default function CustomizationStudio() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -754,7 +784,7 @@ export default function CustomizationStudio() {
     setHistoryIndex(-1);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) {
       alert("Product not found");
       return;
@@ -762,6 +792,22 @@ export default function CustomizationStudio() {
 
     // Calculate total charges from both front and back designs
     const totalCustomizationPrice = getTotalCharges();
+
+    // Capture current view before changing it
+    const currentView = view;
+    
+    // Capture front design
+    setView("front");
+    await new Promise(resolve => setTimeout(resolve, 300)); // Wait for view to update
+    const frontImageCapture = await captureDesignAsImage(canvasRef.current);
+    
+    // Capture back design
+    setView("back");
+    await new Promise(resolve => setTimeout(resolve, 300)); // Wait for view to update
+    const backImageCapture = await captureDesignAsImage(canvasRef.current);
+    
+    // Restore original view
+    setView(currentView);
 
     // Save full design objects so preview and back-to-edit can fully restore state
     const customizationDetails = {
@@ -775,6 +821,9 @@ export default function CustomizationStudio() {
       },
       instructions: instructions,
       totalCharge: totalCustomizationPrice,
+      // Add captured design images
+      frontDesignImage: frontImageCapture,
+      backDesignImage: backImageCapture,
     };
 
     const customizationString = JSON.stringify(customizationDetails);
@@ -809,17 +858,43 @@ export default function CustomizationStudio() {
         size: selectedSize,
         customization: customizationString,
         customizationPrice: totalCustomizationPrice,
-        frontImage: product.frontImage || null,
-        backImage: product.backImage || null,
+        frontImage: frontImageCapture || product.frontImage || null,
+        backImage: backImageCapture || product.backImage || null,
       };
       updateCartItem(cartItem._id, cartItem.size, cartItem.customization, newItem);
       alert('Updated cart item with new customization');
       navigate('/cart');
     } else {
-      addToCart(product, quantity, selectedSize, customizationString, totalCustomizationPrice);
+      addToCart(product, quantity, selectedSize, customizationString, totalCustomizationPrice, frontImageCapture, backImageCapture);
       alert(`Added to cart with Rs.${totalCustomizationPrice} customization charge!`);
       navigate("/cart");
     }
+  };
+
+  const handleView3D = async () => {
+    // Capture current front view
+    setView("front");
+    await new Promise(resolve => setTimeout(resolve, 300)); // Wait for view to update
+    const frontCapture = await captureDesignAsImage(canvasRef.current);
+    
+    // Capture current back view
+    setView("back");
+    await new Promise(resolve => setTimeout(resolve, 300)); // Wait for view to update
+    const backCapture = await captureDesignAsImage(canvasRef.current);
+    
+    // Restore original view
+    setView("front");
+
+    // Navigate to 3D viewer with captured customized designs
+    navigate(`/customize/${id}/3d-view`, { 
+      state: { 
+        frontImage: frontCapture || frontDataUrl, 
+        backImage: backCapture || backDataUrl, 
+        shirtColor,
+        frontDesign,
+        backDesign 
+      } 
+    });
   };
 
   const handleDownloadDesign = async () => {
@@ -1350,20 +1425,6 @@ export default function CustomizationStudio() {
                           }}
                         />
                       )}
-                      <span style={{ fontSize: "10px", marginTop: "5px", textAlign: "center" }}>{sticker.name}</span>
-                      {/* TEMP DEBUG: show URL or emoji marker so we can see what was fetched */}
-                      <div style={{ marginTop: "4px", maxWidth: "120px", overflowWrap: "break-word", fontSize: "9px", color: "#666" }}>
-                        {sticker.url ? (
-                          <div>
-                            <a href={sticker.url} target="_blank" rel="noreferrer" style={{ color: "#0066cc", textDecoration: "underline", fontSize: "10px" }}>Open image</a>
-                            <div style={{ fontSize: "9px", color: "#666", marginTop: "4px" }} title={sticker.url}>{sticker.url}</div>
-                          </div>
-                        ) : sticker.emoji ? (
-                          <span>emoji</span>
-                        ) : (
-                          <span>no-url</span>
-                        )}
-                      </div>
                     </button>
                   ))}
                 </div>
@@ -1411,7 +1472,6 @@ export default function CustomizationStudio() {
                       title={sticker.name}
                     >
                       <img src={sticker.url} alt={sticker.name} style={{ width: "50px", height: "50px" }} />
-                      <span style={{ fontSize: "10px", marginTop: "5px" }}>{sticker.name}</span>
                     </button>
                   ))}
                 </div>
@@ -1665,9 +1725,17 @@ export default function CustomizationStudio() {
             <p style={{ fontSize: "12px", color: "#666", marginTop: "8px" }}>
               Current view: <strong>{view.toUpperCase()}</strong>
             </p>
-            <button onClick={handleDownloadDesign} style={styles.downloadBtn}>
-              ⬇️ Download Design
-            </button>
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px'}}>
+              <button onClick={handleDownloadDesign} style={styles.downloadBtn}>
+                ⬇️ Download Design
+              </button>
+              <button 
+                onClick={handleView3D}
+                style={{...styles.downloadBtn, backgroundColor: '#6366f1'}}
+              >
+                📱 View in 3D
+              </button>
+            </div>
           </div>
         </div>
 

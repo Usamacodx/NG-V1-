@@ -81,7 +81,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = (product, quantity, size, customization = null, customizationPrice = 0) => {
+  const addToCart = (product, quantity, size, customization = null, customizationPrice = 0, frontImage = null, backImage = null) => {
     // Check if product with same size and customization already exists
     const existingItem = cartItems.find(
       (item) =>
@@ -111,9 +111,9 @@ export const CartProvider = ({ children }) => {
         size,
         customization,
         customizationPrice,
-        // Preserve product front/back images if available for accurate preview
-        frontImage: product.frontImage || null,
-        backImage: product.backImage || null,
+        // Store both base product images and customized design images
+        frontImage: frontImage || product.frontImage || null,
+        backImage: backImage || product.backImage || null,
       };
       updatedCart = [...cartItems, newItem];
     }

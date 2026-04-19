@@ -58,22 +58,40 @@ export default function Cart() {
                 style={styles.cartItem}
               >
                 {(() => {
-                  const imageUrl = item.frontImage || item.image || "https://via.placeholder.com/100";
-                  
-                  // Get shirt color from customization if available
-                  let shirtColorToUse = "#FFFFFF";
+                  // Check if we have a captured design image (from customization)
+                  let customizationDetails = null;
                   if (item.customization) {
                     try {
-                      const details = typeof item.customization === "string"
+                      customizationDetails = typeof item.customization === "string"
                         ? JSON.parse(item.customization)
                         : item.customization;
-                      const front = details.frontDesign || details;
-                      shirtColorToUse = front.shirtColor || "#FFFFFF";
                     } catch (e) {
-                      // Use default white
+                      console.error("Failed to parse customization:", e);
                     }
                   }
 
+                  // Prioritize captured design image, then item.frontImage, then fallback
+                  const designImage = customizationDetails?.frontDesignImage || item.frontImage;
+                  const imageUrl = designImage || item.image || "https://via.placeholder.com/100";
+                  
+                  // Get shirt color from customization if available
+                  let shirtColorToUse = "#FFFFFF";
+                  if (customizationDetails) {
+                    const front = customizationDetails.frontDesign || customizationDetails;
+                    shirtColorToUse = front.shirtColor || "#FFFFFF";
+                  }
+
+                  // If we have a captured design image or it's a data URL, display it directly
+                  if (imageUrl.startsWith("data:image")) {
+                    return (
+                      <img
+                        src={imageUrl}
+                        alt={item.name || "Product"}
+                        style={styles.itemImage}
+                      />
+                    );
+                  }
+                  
                   // If SVG, render with SVGShirtContainer, otherwise use img
                   if (isSVGImage(imageUrl)) {
                     return (

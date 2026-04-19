@@ -325,9 +325,15 @@ export default function AdminOrders() {
                     const productPrice = Number(it.price || it.productPrice || 0);
                     const customizationPrice = Number(it.customizationPrice || customization.totalCharge || customization.totalCharge || 0);
                     const lineTotal = ((productPrice + customizationPrice) * (it.quantity || 1)).toFixed(2);
+                    
+                    // Get the captured design image, prioritizing it over base product image
+                    const capturedFrontDesignImage = customization?.frontDesignImage;
+                    const capturedBackDesignImage = customization?.backDesignImage;
+                    const displayImage = capturedFrontDesignImage || it.frontImage || it.image;
+                    
                     return (
                       <div key={it._id || it.productId} className="flex gap-3 items-start">
-                        <img src={it.frontImage || it.image} alt={it.name} className="w-20 h-20 object-cover border" />
+                        <img src={displayImage} alt={it.name} className="w-20 h-20 object-cover border" />
                         <div className="flex-1">
                           <div className="font-semibold">{it.name} x{it.quantity}</div>
                           <div className="text-sm text-gray-600">Size: {it.size || 'N/A'}</div>
@@ -338,10 +344,21 @@ export default function AdminOrders() {
                           <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div>
                               <div className="font-semibold">Front Design</div>
+                              {capturedFrontDesignImage && (
+                                <div className="mb-2 border rounded p-2 bg-gray-50">
+                                  <img src={capturedFrontDesignImage} alt="Front Design Preview" className="w-full h-auto object-contain" />
+                                </div>
+                              )}
                               <DesignView design={front} />
-                              {front && (it.frontImage || it.image) && (
+                              {(front || capturedFrontDesignImage) && (
                                 <button
-                                  onClick={() => renderAndDownloadDesign(front, it.frontImage || it.image, `${o._id}_${it._id || it.productId}_front.png`)}
+                                  onClick={() => {
+                                    if (capturedFrontDesignImage) {
+                                      downloadImage(capturedFrontDesignImage, `${o._id}_${it._id || it.productId}_front.png`);
+                                    } else {
+                                      renderAndDownloadDesign(front, it.frontImage || it.image, `${o._id}_${it._id || it.productId}_front.png`);
+                                    }
+                                  }}
                                   className="mt-2 inline-block bg-indigo-600 text-white text-sm px-3 py-1 rounded"
                                 >
                                   Download Front Design
@@ -350,10 +367,21 @@ export default function AdminOrders() {
                             </div>
                             <div>
                               <div className="font-semibold">Back Design</div>
+                              {capturedBackDesignImage && (
+                                <div className="mb-2 border rounded p-2 bg-gray-50">
+                                  <img src={capturedBackDesignImage} alt="Back Design Preview" className="w-full h-auto object-contain" />
+                                </div>
+                              )}
                               <DesignView design={back} />
-                              {back && (it.frontImage || it.image) && (
+                              {(back || capturedBackDesignImage) && (
                                 <button
-                                  onClick={() => renderAndDownloadDesign(back, it.frontImage || it.image, `${o._id}_${it._id || it.productId}_back.png`)}
+                                  onClick={() => {
+                                    if (capturedBackDesignImage) {
+                                      downloadImage(capturedBackDesignImage, `${o._id}_${it._id || it.productId}_back.png`);
+                                    } else {
+                                      renderAndDownloadDesign(back, it.frontImage || it.image, `${o._id}_${it._id || it.productId}_back.png`);
+                                    }
+                                  }}
                                   className="mt-2 inline-block bg-indigo-600 text-white text-sm px-3 py-1 rounded"
                                 >
                                   Download Back Design
