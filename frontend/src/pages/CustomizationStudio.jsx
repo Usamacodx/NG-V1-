@@ -9,9 +9,16 @@ import SVGShirtContainer from "../components/SVGShirtContainer";
 // Helper function to check if image is SVG (works with base64 or file paths)
 const isSVGImage = (imageData) => {
   if (!imageData) return false;
-  if (imageData.includes("data:image/svg+xml")) return true;
-  if (typeof imageData === "string" && imageData.toLowerCase().endsWith(".svg")) return true;
-  return false;
+  const isSvg = imageData.includes("data:image/svg+xml") || 
+                (typeof imageData === "string" && imageData.toLowerCase().endsWith(".svg"));
+  
+  // Debug logging
+  if (imageData && imageData.length > 0) {
+    const preview = imageData.substring(0, 100);
+    console.log("isSVGImage check:", { isSvg, preview });
+  }
+  
+  return isSvg;
 };
 
 // Utility function to capture a design view as a PNG data URL
